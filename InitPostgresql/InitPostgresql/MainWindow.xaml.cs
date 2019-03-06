@@ -183,7 +183,7 @@ namespace InitPostgresql
                 var si = new ProcessStartInfo()
                 {
                     FileName = InitDbExe,
-                    Arguments = string.Format("--auth=password --pgdata=\"{0}\" --encoding=UTF8 --lc-collate=C --username=postgres --pwfile=\"{1}\"",
+                    Arguments = string.Format("--auth=password --pgdata=\"{0}\" --encoding=UTF8 --locale=C --username=postgres --pwfile=\"{1}\"",
                                         PgDataDirectory.Replace(@"\\", @"\"), PgPass.Replace(@"\\", @"\")),
                     RedirectStandardError = true,
                     RedirectStandardOutput = true,

@@ -60,7 +60,7 @@ namespace InitPostgresql
             DataContext = this;
             PostgresqlPort = Convert.ToInt32(App.ArgValue("--postgres-port"));
             if (PostgresqlPort == 0)
-                PostgresqlPort = 4000;
+                PostgresqlPort = 4016;
             PostgresUserPassword = App.ArgValue("--postgres-user-pass") ?? "123456";
             NewUser = App.ArgValue("--new-user") ?? "";
             NewUserPassword = App.ArgValue("--new-user-pass") ?? "";

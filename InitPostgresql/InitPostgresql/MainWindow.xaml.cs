@@ -48,7 +48,7 @@ namespace InitPostgresql
 						Close();
 					else
 					{
-						string errorFile = Path.Combine(BaseDirectory, @"temp\errors.txt");
+						string errorFile = Path.Combine(BaseDirectory, @"errors.txt");
 						File.AppendAllText(errorFile, e.Message);
 						Process.Start(errorFile);
 						throw;
@@ -60,7 +60,7 @@ namespace InitPostgresql
             DataContext = this;
             PostgresqlPort = Convert.ToInt32(App.ArgValue("--postgres-port"));
             if (PostgresqlPort == 0)
-                PostgresqlPort = 4016;
+                PostgresqlPort = 4011;
             PostgresUserPassword = App.ArgValue("--postgres-user-pass") ?? "123456";
             NewUser = App.ArgValue("--new-user") ?? "";
             NewUserPassword = App.ArgValue("--new-user-pass") ?? "";
@@ -73,6 +73,7 @@ namespace InitPostgresql
 				else
 					Button_Click(this, null);
             }
+            Topmost = true;
         }
 
         #region EnableChange
@@ -139,13 +140,13 @@ namespace InitPostgresql
 
         public string PgDataDirectory => Path.Combine(BaseDirectory, PostgresDirectory, @"data");
 
-        public string PgPass => Path.Combine(BaseDirectory, @"temp\temp.txt");
+        public string PgPass => Path.Combine(BaseDirectory, @"temp.txt");
 
         public string InitDbExe => Path.Combine(BaseDirectory, PostgresDirectory, @"bin\initdb.exe");
 
         public string PSqlExe => Path.Combine(BaseDirectory, PostgresDirectory, @"bin\psql.exe");
 
-        public string PgScript => Path.Combine(BaseDirectory, @"temp\script.psql");
+        public string PgScript => Path.Combine(BaseDirectory, @"script.psql");
 
         public string PostgresqlConf => Path.Combine(PgDataDirectory, @"postgresql.conf");
 
@@ -256,6 +257,7 @@ namespace InitPostgresql
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            Hide();
             InitPostgresCluster();
         }
     }

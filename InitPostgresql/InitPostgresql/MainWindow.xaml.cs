@@ -149,7 +149,7 @@ namespace InitPostgresql
 
         public string PostgresqlConf => Path.Combine(PgDataDirectory, @"postgresql.conf");
 
-        public string PostgresDirectory => "PostgreSQL";
+        public string PostgresDirectory => "";
 
         public void InitPostgresCluster()
         {

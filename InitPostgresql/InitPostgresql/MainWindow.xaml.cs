@@ -1,20 +1,8 @@
-﻿using Newtonsoft.Json;
-using Npgsql;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 
 namespace InitPostgresql
 {
@@ -25,51 +13,22 @@ namespace InitPostgresql
     {
         public MainWindow()
         {
-            if (App.ArgValue("--execute-script") == "true" && File.Exists(PgScript))
-            {
-				try
-				{
-					var script = JsonConvert.DeserializeObject<Script>(File.ReadAllText(PgScript));
-
-					using (var cn = new NpgsqlConnection(script.ConnectionString))
-					{
-						using (var cmd = new NpgsqlCommand(script.Commands, cn))
-						{
-							cn.Open();
-							cmd.ExecuteNonQuery();
-							cn.Close();
-						}
-					}
-					Close();
-				}
-				catch (Exception e)
-				{
-					if (e.Message.Contains("already exists"))
-						Close();
-					else
-					{
-						string errorFile = Path.Combine(BaseDirectory, @"errors.txt");
-						File.AppendAllText(errorFile, e.Message);
-						Process.Start(errorFile);
-						throw;
-					}
-				}
-			}
-
-			InitializeComponent();
+            InitializeComponent();
             DataContext = this;
             PostgresqlPort = Convert.ToInt32(App.ArgValue("--postgres-port"));
             if (PostgresqlPort == 0)
-                PostgresqlPort = 4011;
+                PostgresqlPort = 4012;
             PostgresUserPassword = App.ArgValue("--postgres-user-pass") ?? "123456";
-            NewUser = App.ArgValue("--new-user") ?? "";
-            NewUserPassword = App.ArgValue("--new-user-pass") ?? "";
             EnableChange = App.ArgValue("--disable-change") == "true" ? false : true;
 
-            if (App.ArgValue("--auto-init") == "true")
-			    Button_Click(this, null);
-
             Topmost = true;
+
+            if (App.ArgValue("--auto-init") == "true" || File.Exists(PostgresqlConf))
+            {
+                Show();
+                Button_Click(this, null);
+                Close();
+            }
         }
 
         #region EnableChange
@@ -108,31 +67,7 @@ namespace InitPostgresql
             DependencyProperty.Register("PostgresUserPassword", typeof(string), typeof(MainWindow), new PropertyMetadata(""));
         #endregion //PostgresUserPassword
 
-        #region NewUser
-        public string NewUser
-        {
-            get { return (string)GetValue(NewUserProperty); }
-            set { SetValue(NewUserProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for NewUser.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty NewUserProperty =
-            DependencyProperty.Register("NewUser", typeof(string), typeof(MainWindow), new PropertyMetadata(""));
-        #endregion //NewUser
-
-        #region NewUserPassword
-        public string NewUserPassword
-        {
-            get { return (string)GetValue(NewUserPasswordProperty); }
-            set { SetValue(NewUserPasswordProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for NewPassword.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty NewUserPasswordProperty =
-            DependencyProperty.Register("NewUserPassword", typeof(string), typeof(MainWindow), new PropertyMetadata(""));
-        #endregion //NewUserPassword
-
-        public string BaseDirectory => AppDomain.CurrentDomain.BaseDirectory;
+        public string BaseDirectory => Debugger.IsAttached ? "C:\\ABC Software\\ABC Postgresql 12\\PostgreSQL" : AppDomain.CurrentDomain.BaseDirectory;
 
         public string PgDataDirectory => Path.Combine(BaseDirectory, PostgresDirectory, @"data");
 
@@ -141,8 +76,6 @@ namespace InitPostgresql
         public string InitDbExe => Path.Combine(BaseDirectory, PostgresDirectory, @"bin\initdb.exe");
 
         public string PSqlExe => Path.Combine(BaseDirectory, PostgresDirectory, @"bin\psql.exe");
-
-        public string PgScript => Path.Combine(BaseDirectory, @"script.psql");
 
         public string PostgresqlConf => Path.Combine(PgDataDirectory, @"postgresql.conf");
 
@@ -157,18 +90,13 @@ namespace InitPostgresql
             {
                 if (WritePostgresConf())
                     MessageBox.Show("Cluster is already initialized. Only the postgresql.conf file was updated.", "Only Updated postgresql.conf", MessageBoxButton.OK, MessageBoxImage.Information);
-                this.Close();
+
+                return;
             }
 
             if (PostgresqlPort < 1 || string.IsNullOrWhiteSpace(PostgresUserPassword))
             {
                 MessageBox.Show("Port must be greater than 0 and password may not be blank.", "Invalid Values", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(NewUser) && string.IsNullOrWhiteSpace(NewUserPassword))
-            {
-                MessageBox.Show("When setting a new user, the password may not be blank", "Invalid Values", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
             
@@ -208,26 +136,6 @@ namespace InitPostgresql
                 File.Delete(PgPass);
 
                 WritePostgresConf();
-
-                if (!string.IsNullOrWhiteSpace(NewUser))
-                {
-					var script = new Script() {
-						ConnectionString = $"Server=127.0.0.1;Port={PostgresqlPort};Database=postgres;User Id=postgres;Password={PostgresUserPassword};",
-						Commands = $@"DO $do$
-									BEGIN
-										IF NOT EXISTS (
-											SELECT                       -- SELECT list can stay empty for this
-											FROM   pg_catalog.pg_roles
-											WHERE  rolname = 'candleapi') THEN
-
-											CREATE ROLE {NewUser} WITH CREATEDB LOGIN PASSWORD '{NewUserPassword}';
-										END IF;
-									END
-									$do$;"
-					};
-                    File.WriteAllText(PgScript, JsonConvert.SerializeObject(script));
-                }
-
             }
             catch(Exception e)
             {

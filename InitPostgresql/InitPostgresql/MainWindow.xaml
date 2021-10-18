@@ -50,12 +50,6 @@
                     <TextBox Text="{Binding PostgresUserPassword}"
                      Grid.Row="1"
                      Grid.Column="1"/>
-                    <TextBox Text="{Binding NewUser}"
-                     Grid.Row="2"
-                     Grid.Column="1"/>
-                    <TextBox Text="{Binding NewUserPassword}"
-                     Grid.Row="3"
-                     Grid.Column="1"/>
                 </Grid>
                 <Button Content="OK"
                         Click="Button_Click"

@@ -67,12 +67,8 @@ namespace InitPostgresql
             EnableChange = App.ArgValue("--disable-change") == "true" ? false : true;
 
             if (App.ArgValue("--auto-init") == "true")
-            {
-				if (File.Exists(PostgresqlConf))
-					Close();
-				else
-					Button_Click(this, null);
-            }
+			    Button_Click(this, null);
+
             Topmost = true;
         }
 

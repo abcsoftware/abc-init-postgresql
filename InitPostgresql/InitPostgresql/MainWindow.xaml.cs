@@ -159,8 +159,8 @@ namespace InitPostgresql
 
             if (File.Exists(PostgresqlConf))
             {
-                WritePostgresConf();
-                MessageBox.Show("Cluster is already initialized. Only the postgresql.conf file was updated.", "Only Updated postgresql.conf", MessageBoxButton.OK, MessageBoxImage.Information);
+                if (WritePostgresConf())
+                    MessageBox.Show("Cluster is already initialized. Only the postgresql.conf file was updated.", "Only Updated postgresql.conf", MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
             }
 
@@ -241,12 +241,13 @@ namespace InitPostgresql
             Close();
         }
 
-        public void WritePostgresConf()
+        public bool WritePostgresConf()
         {
             if (!File.Exists(PostgresqlConf))
                 throw new FileNotFoundException($"Couldn't find postgresql.conf at {PostgresqlConf}");
 
             var lines = File.ReadAllText(PostgresqlConf);
+            var original = lines;
             lines = lines.Replace("#listen_addresses = 'localhost'", "listen_addresses = 'localhost'");
             lines = lines.Replace("#port = 5432", "port = " + PostgresqlPort);
             lines = lines.Replace("max_connections = 100", "max_connections = 500");
@@ -255,6 +256,8 @@ namespace InitPostgresql
             lines = lines.Replace("#log_line_prefix = ''", "log_line_prefix = '%t'");
 
             File.WriteAllText(PostgresqlConf, lines);
+
+            return original != lines;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

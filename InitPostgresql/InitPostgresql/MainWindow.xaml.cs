@@ -159,7 +159,8 @@ namespace InitPostgresql
 
             if (File.Exists(PostgresqlConf))
             {
-                MessageBox.Show("Cluster is already initialized.", "Nothing to do.", MessageBoxButton.OK, MessageBoxImage.Information);
+                WritePostgresConf();
+                MessageBox.Show("Cluster is already initialized. Only the postgresql.conf file was updated.", "Only Updated postgresql.conf", MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
             }
 
@@ -248,6 +249,7 @@ namespace InitPostgresql
             var lines = File.ReadAllText(PostgresqlConf);
             lines = lines.Replace("#listen_addresses = 'localhost'", "listen_addresses = 'localhost'");
             lines = lines.Replace("#port = 5432", "port = " + PostgresqlPort);
+            lines = lines.Replace("max_connections = 100", "max_connections = 500");
             lines = lines.Replace("#log_destination = 'stderr'", "log_destination = 'stderr'");
             lines = lines.Replace("#logging_collector = off", "logging_collector = on");
             lines = lines.Replace("#log_line_prefix = ''", "log_line_prefix = '%t'");
